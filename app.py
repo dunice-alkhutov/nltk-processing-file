@@ -19,6 +19,7 @@ import sys, getopt
 import nltk
 import re
 import string
+from datetime import datetime
 from string import maketrans
 from nltk import word_tokenize
 from nltk.corpus import stopwords
@@ -40,15 +41,19 @@ def process_file(path, n):
     @path is path to file what is needed to process
     @n is number of n-grams
     """
-    print word_grams('one two three four'.split(' '), n)
-    print('Start processing...')
+    # print word_grams('one two three four'.split(' '), n)
+    print('* Start processing...')
     try:
         sample_file = open(path, 'r')
         read_file = sample_file.read()
         stop = string.punctuation + '\n'
         file_content = re.split(r'\s+|[,;:.-]\s*|\\n', read_file)
-        # print(file_content)
-        fdist = nltk.FreqDist(word_grams(file_content, n))
+        print("* Removed specsymbols and punctuation")
+
+        filtered_words = [word for word in file_content if word not in stopwords.words('english')]
+        print("* Removed stop words")
+
+        fdist = nltk.FreqDist(word_grams(filtered_words, n))
         top10 = sorted(fdist.items(), key=lambda x: x[1], reverse=True)[:10]
         print('TOP10 result:')
         for k,v in top10:
@@ -61,8 +66,10 @@ def process_file(path, n):
 def main(argv):
     """
     Starting function
-    variable 'ngrams' has default value - 2
+    Variable 'ngrams' has default value - 2
     """
+    
+    start_time = datetime.now()
     n_grams = 2
     path = None
     try:
@@ -80,6 +87,12 @@ def main(argv):
             sys.exit()
 
     process_file(path, int(n_grams))
-
+    end_time = datetime.now()
+    delta = end_time - start_time
+    # print(delta.total_seconds())
+    # m, s = divmod(delta.total_seconds(), 60)
+    # h, m = divmod(m, 60)
+    # print "It talkes %d hours %02d minutes and %02d seconds" % (h, m, s)
+    print("It talkes {} seconds".format(delta.total_seconds()))
 if __name__ == "__main__":
     main(sys.argv[1:])

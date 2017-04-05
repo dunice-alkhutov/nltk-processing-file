@@ -1,4 +1,4 @@
-dump 2.txt
-dump 2.txt.zip
+*.txt
+*.zip
 .DS_Store
 venv
