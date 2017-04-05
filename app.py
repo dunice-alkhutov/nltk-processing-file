@@ -26,12 +26,13 @@ from nltk.util import ngrams
 # from sklearn.feature_extraction.text import CountVectorizer
 
 def word_grams(text, n):
-    # print('text',text)
-    s = []
+    """
+    Create list with ngrams
+    """
+    ngram_list = []
     for ngram in ngrams(text, n):
-        # print('ngram', ngram)
-        s.append(tuple(ngram))
-    return s
+        ngram_list.append(tuple(ngram))
+    return ngram_list
 
 def process_file(path, n):
     """
@@ -47,7 +48,7 @@ def process_file(path, n):
         stop = string.punctuation + '\n'
         file_content = re.split(r'\s+|[,;:.-]\s*|\\n', read_file)
         # print(file_content)
-        fdist = nltk.FreqDist( word_grams(file_content, n) )
+        fdist = nltk.FreqDist(word_grams(file_content, n))
         top10 = sorted(fdist.items(), key=lambda x: x[1], reverse=True)[:10]
         print('TOP10 result:')
         for k,v in top10:
@@ -58,23 +59,27 @@ def process_file(path, n):
 
 
 def main(argv):
-    ngrams = 2
+    """
+    Starting function
+    variable 'ngrams' has default value - 2
+    """
+    n_grams = 2
     path = None
     try:
-        opts, args = getopt.getopt(argv,"n:p:",["ngrams=","path="])
+        opts, _ = getopt.getopt(argv, "n:p:", ["ngrams=", "path="])
     except getopt.GetoptError as ex:
         print(ex)
         print('example: "python app.py -n 2" for 2-grams')
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-n':
-            ngrams = arg
+            n_grams = arg
         elif opt == '-p':
             path = arg
         else:
             sys.exit()
 
-    process_file(path, int(ngrams))
+    process_file(path, int(n_grams))
 
 if __name__ == "__main__":
-   main(sys.argv[1:])
+    main(sys.argv[1:])
