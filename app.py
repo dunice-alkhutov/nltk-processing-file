@@ -44,12 +44,24 @@ def process_file(path, n, top_number, print_result_to_terminal=False, add_stats=
         file_content = re.split(r'\s+|[,-;:.!"#$%&\'()\/*\/+<=>?@[\]^_`{|}]\s*|\\n|\\r', read_file)
         print("* Removed specsymbols and punctuation")
 
-        filtered_words = [word.lower() for word in file_content if word not in stopwords.words('english') and word is not '']
-        print("* Removed stop words")
+        created_ngrams = word_grams(file_content, n)
+        print("* Created ngrams")
 
-        created_ngrams = word_grams(filtered_words, n)
+        stop = stopwords.words('english') + ['']
+
+        def has_stop(words):
+            for word in words:
+                if word in stop:
+                    return True
+            return False
+
+        def lo_lower(words):
+            return tuple(word.lower() for word in words)
+
         for n_, arr in created_ngrams.items():
-            fdist = nltk.FreqDist(arr)
+            filtered_words = [lo_lower(words) for words in arr if not has_stop(words)]
+            print("* Removed ngrams with stop words for {}-grams".format(n_))
+            fdist = nltk.FreqDist(filtered_words)
 
             result = sorted(fdist.items(), key=lambda x: x[1], reverse=True)
             write_result(result, n_, add_stats)
@@ -88,6 +100,7 @@ def write_result(result, n, add_stats):
     if not add_stats:
         f.write(']')
     f.close()
+    print("* Writing to file {} completed".format(file_name))
 
 
 def main(argv):
