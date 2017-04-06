@@ -2,19 +2,6 @@
 
 @ params will be described here
 """
-# import string
-
-
-# def main():
-#     stop = stopwords.words('english') + string.punctuation + '\n'
-#     with open('text.txt', 'r') as sample_file:
-#         for line in sample_file:
-#             print('*', [i for i in word_tokenize(line.lower()) if i not in stop])
-
-# if __name__ == "__main__":
-#     main()
-#########
-
 import sys, getopt
 import nltk
 import re
@@ -26,41 +13,81 @@ from nltk.corpus import stopwords
 from nltk.util import ngrams
 # from sklearn.feature_extraction.text import CountVectorizer
 
-def word_grams(text, n):
+
+def word_grams(text, n = 0):
     """
     Create list with ngrams
     """
-    ngram_list = []
-    for ngram in ngrams(text, n):
-        ngram_list.append(tuple(ngram))
+    ngram_list = {}
+    n_min = 1
+    n_max = 4
+    if n != 0:
+        n_min = n_max = n
+        
+    for n_ in range(n_min, n_max+1):
+        ngram_list[str(n_)] = []
+        for ngram in ngrams(text, n_):
+            ngram_list[str(n_)].append(tuple(ngram))
     return ngram_list
 
-def process_file(path, n):
+
+def process_file(path, n, top_number, print_result_to_terminal=False, add_stats=False):
     """
     Process file
     @path is path to file what is needed to process
     @n is number of n-grams
     """
-    # print word_grams('one two three four'.split(' '), n)
     print('* Start processing...')
     try:
         sample_file = open(path, 'r')
         read_file = sample_file.read()
-        stop = string.punctuation + '\n'
-        file_content = re.split(r'\s+|[,;:.-]\s*|\\n', read_file)
+        file_content = re.split(r'\s+|[,-;:.!"#$%&\'()\/*\/+<=>?@[\]^_`{|}]\s*|\\n|\\r', read_file)
         print("* Removed specsymbols and punctuation")
 
-        filtered_words = [word for word in file_content if word not in stopwords.words('english')]
+        filtered_words = [word.lower() for word in file_content if word not in stopwords.words('english') and word is not '']
         print("* Removed stop words")
 
-        fdist = nltk.FreqDist(word_grams(filtered_words, n))
-        top10 = sorted(fdist.items(), key=lambda x: x[1], reverse=True)[:10]
-        print('TOP10 result:')
-        for k,v in top10:
-            print k,v
+        created_ngrams = word_grams(filtered_words, n)
+        for n_, arr in created_ngrams.items():
+            fdist = nltk.FreqDist(arr)
+
+            result = sorted(fdist.items(), key=lambda x: x[1], reverse=True)
+            write_result(result, n_, add_stats)
+            top = result[:top_number]
+
+            if print_result_to_terminal:
+                print('TOP{} result for {}-grams:'.format(top_number, n_))
+                for k,v in top:
+                    print k,v
+        return result
+
     except (IOError, TypeError) as ex:
         print('FILE ERROR! {}'.format(ex))
         print('You may forgot -p flag with value')
+
+
+def write_result(result, n, add_stats):
+    """
+    Write stats to file
+    @result is result of file processing
+    @n is n-grams, needed to choose target file to write
+    """
+    file_name = '{}-grams'.format(n)
+    print("* Starting write to file {}".format(file_name))
+    f = open(file_name, 'w')
+    f.write('{}-grams \t frequency\n'.format(n))
+    if not add_stats:
+        f.write('[')
+
+    for words, value in result:
+        if add_stats:
+            f.write('{0} {1} \n'.format(words, value))
+        else:
+            f.write('{},\n'.format(words))
+
+    if not add_stats:
+        f.write(']')
+    f.close()
 
 
 def main(argv):
@@ -68,31 +95,53 @@ def main(argv):
     Starting function
     Variable 'ngrams' has default value - 2
     """
-    
     start_time = datetime.now()
-    n_grams = 2
+
+    n_grams = 0
     path = None
+    top_number = 10
+    enable_printing = False
+    add_stats = False
     try:
-        opts, _ = getopt.getopt(argv, "n:p:", ["ngrams=", "path="])
+        opts, _ = getopt.getopt(argv, "n:p:t:e h s", ["ngrams=", "path=", "top_number="])
     except getopt.GetoptError as ex:
         print(ex)
-        print('example: "python app.py -n 2" for 2-grams')
+        print("See help by 'python app.py -h'")
         sys.exit(2)
     for opt, arg in opts:
+        if opt == '-h':
+            message = '''You can use next flags:
+            -p  path to file
+            -h  show help
+            -n  process file only for this grams
+            -e  enable additional printing to terminal
+            -t  show top results for each n-grams(works only with -e)
+            -s  put statistics to output files
+            Example: "python app.py -p /path/to/file -n 2" for 2-grams'''
+            print(message)
+            
+            sys.exit()
         if opt == '-n':
-            n_grams = arg
+            n_grams = 4 if int(arg) > 4 else int(arg)
         elif opt == '-p':
             path = arg
+        elif opt == '-t':
+            top_number = int(arg)
+        elif opt == '-e':
+            enable_printing = True
+        elif opt == '-s':
+            add_stats = True
         else:
             sys.exit()
-
-    process_file(path, int(n_grams))
+    process_file(path, n_grams, top_number, enable_printing, add_stats)
+    # result = process_file(path, n_grams, top_number)
+    # write_result(result, n_grams)
     end_time = datetime.now()
     delta = end_time - start_time
     # print(delta.total_seconds())
-    # m, s = divmod(delta.total_seconds(), 60)
     # h, m = divmod(m, 60)
-    # print "It talkes %d hours %02d minutes and %02d seconds" % (h, m, s)
-    print("It talkes {} seconds".format(delta.total_seconds()))
+    m, s = divmod(int(delta.total_seconds()), 60)
+    print "It talkes %02d minutes and %02d seconds" % (m, s)
+    # print("It talkes {} seconds".format(delta.total_seconds()))
 if __name__ == "__main__":
     main(sys.argv[1:])
