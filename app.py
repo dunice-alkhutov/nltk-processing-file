@@ -113,9 +113,9 @@ def main(argv):
             message = '''You can use next flags:
             -p  path to file
             -h  show help
-            -n  process file only for this grams
+            -n  process file only for this grams (need number)
             -e  enable additional printing to terminal
-            -t  show top results for each n-grams(works only with -e)
+            -t  show top results for each n-grams(works only with -e, need number)
             -s  put statistics to output files
             Example: "python app.py -p /path/to/file -n 2" for 2-grams'''
             print(message)
