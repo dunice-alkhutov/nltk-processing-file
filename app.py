@@ -44,12 +44,13 @@ def process_file(path, n, top_number, print_result_to_terminal=False, add_stats=
         sample_file = open(path, 'r')
         read_file = sample_file.read()
         file_sentenses = re.split(r'\s*[,.\-;\'()\/*\/+<=>?@[\]^_`{|}]\s*|[,.\-;\'()\/*\/+<=>?@[\]^_`{|}]|\\t|\\f|\\v|\\n|\\r', read_file)
-        print("* Removed specsymbols and punctuation")
-        created_ngrams = []
+        print("* [Completed step 1 of 3] Removed specsymbols and punctuation")
+        
+        print("* Staring create ngrams")
         ngram_list = {}
         for sentense in file_sentenses:
             created_ngrams = word_grams(sentense.split(' '), ngram_list, n)
-        print("* Created ngrams")
+        print("* [Completed step 2 of 3] Created ngrams")
 
         stop = stopwords.words('english') + ['']
 
@@ -62,10 +63,10 @@ def process_file(path, n, top_number, print_result_to_terminal=False, add_stats=
         def lo_lower(words):
             return tuple(word.lower().strip() for word in words if '' not in words)
 
-
-        for n_, arr in created_ngrams.items():
+        print('* Start removing stopwords and writting to files')
+        for n_, arr in ngram_list.items():
             filtered_words = [lo_lower(words) for words in arr if not has_stop(words)]
-            print("* Removed ngrams with stop words for {}-grams".format(n_))
+            print("-Removed stop words for {}-grams".format(n_))
             fdist = nltk.FreqDist(filtered_words)
 
             result = sorted(fdist.items(), key=lambda x: x[1], reverse=True)
@@ -76,6 +77,7 @@ def process_file(path, n, top_number, print_result_to_terminal=False, add_stats=
                 print('TOP{} result for {}-grams:'.format(top_number, n_))
                 for k,v in top:
                     print k,v
+        print('* [Completed step 3 of 3] Removing stopwords and writting to files')
         return result
 
     except (IOError, TypeError) as ex:
@@ -90,7 +92,7 @@ def write_result(result, n, add_stats):
     @n is n-grams, needed to choose target file to write
     """
     file_name = '{}-grams'.format(n)
-    print("* Starting write to file {}".format(file_name))
+    print("-Starting write to file {}".format(file_name))
     f = open(file_name, 'w')
     f.write('{}-grams \t frequency\n'.format(n))
     if not add_stats:
@@ -105,7 +107,7 @@ def write_result(result, n, add_stats):
     if not add_stats:
         f.write(']')
     f.close()
-    print("* Writing to file {} completed".format(file_name))
+    print("-Writing to file {} completed".format(file_name))
 
 
 def main(argv):
@@ -152,14 +154,10 @@ def main(argv):
         else:
             sys.exit()
     process_file(path, n_grams, top_number, enable_printing, add_stats)
-    # result = process_file(path, n_grams, top_number)
-    # write_result(result, n_grams)
+
     end_time = datetime.now()
     delta = end_time - start_time
-    # print(delta.total_seconds())
-    # h, m = divmod(m, 60)
     m, s = divmod(int(delta.total_seconds()), 60)
     print "It talkes %02d minutes and %02d seconds" % (m, s)
-    # print("It talkes {} seconds".format(delta.total_seconds()))
 if __name__ == "__main__":
     main(sys.argv[1:])
