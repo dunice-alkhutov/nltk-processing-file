@@ -27,12 +27,12 @@ $ python app.py -h
 ```
 to see all flags and them description
 
-
+create_random_sample.py
+-----------
 There is help script `create_random_sample.py`
 It can create small sample file to test
 
-Usage create_random_sample.py
------------
+Usage:
 ```shell
 $ python create_random_sample.py -s src.txt -d dest.txt -n 150
 ```
