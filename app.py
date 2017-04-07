@@ -14,20 +14,22 @@ from nltk.util import ngrams
 # from sklearn.feature_extraction.text import CountVectorizer
 
 
-def word_grams(text, n = 0):
+def word_grams(text, ngram_list, n = 0):
     """
     Create list with ngrams
     """
-    ngram_list = {}
+    
     n_min = 1
     n_max = 4
     if n != 0:
         n_min = n_max = n
-        
     for n_ in range(n_min, n_max+1):
-        ngram_list[str(n_)] = []
         for ngram in ngrams(text, n_):
-            ngram_list[str(n_)].append(tuple(ngram))
+            try:
+                ngram_list[str(n_)].append(tuple(ngram))
+            except KeyError as ex:
+                ngram_list[str(n_)] = []
+                ngram_list[str(n_)].append(tuple(ngram))
     return ngram_list
 
 
@@ -41,10 +43,12 @@ def process_file(path, n, top_number, print_result_to_terminal=False, add_stats=
     try:
         sample_file = open(path, 'r')
         read_file = sample_file.read()
-        file_content = re.split(r'\s+|[,-;:.!"#$%&\'()\/*\/+<=>?@[\]^_`{|}]\s*|\\n|\\r', read_file)
+        file_sentenses = re.split(r'\s*[,.\-;\'()\/*\/+<=>?@[\]^_`{|}]\s*|[,.\-;\'()\/*\/+<=>?@[\]^_`{|}]|\\t|\\f|\\v|\\n|\\r', read_file)
         print("* Removed specsymbols and punctuation")
-
-        created_ngrams = word_grams(file_content, n)
+        created_ngrams = []
+        ngram_list = {}
+        for sentense in file_sentenses:
+            created_ngrams = word_grams(sentense.split(' '), ngram_list, n)
         print("* Created ngrams")
 
         stop = stopwords.words('english') + ['']
@@ -56,7 +60,8 @@ def process_file(path, n, top_number, print_result_to_terminal=False, add_stats=
             return False
 
         def lo_lower(words):
-            return tuple(word.lower() for word in words)
+            return tuple(word.lower().strip() for word in words if '' not in words)
+
 
         for n_, arr in created_ngrams.items():
             filtered_words = [lo_lower(words) for words in arr if not has_stop(words)]
@@ -132,7 +137,7 @@ def main(argv):
             -s  put statistics to output files
             Example: "python app.py -p /path/to/file -n 2" for 2-grams'''
             print(message)
-            
+
             sys.exit()
         if opt == '-n':
             n_grams = 4 if int(arg) > 4 else int(arg)
