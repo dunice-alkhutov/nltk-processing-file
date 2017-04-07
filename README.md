@@ -4,10 +4,11 @@ Python tool to find a histogram of most common n-grams where n=1,2,3, or 4 in a 
 Instalation
 -----------
 
-You need install nltk lib:
+You need install nltk lib and progress bar lib:
 
 ```shell
 $ pip install nltk
+$ pip install progressbar2
 ```
 
 Quick start

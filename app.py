@@ -5,20 +5,24 @@
 import sys, getopt
 import nltk
 import re
+import progressbar
+import time
 import string
+import warnings
 from datetime import datetime
 from string import maketrans
 from nltk import word_tokenize
 from nltk.corpus import stopwords
 from nltk.util import ngrams
 # from sklearn.feature_extraction.text import CountVectorizer
+warnings.filterwarnings("ignore")
 
-
+bar = progressbar.ProgressBar(redirect_stdout=True)
+bar.start(0)
 def word_grams(text, ngram_list, n = 0):
     """
     Create list with ngrams
     """
-    
     n_min = 1
     n_max = 4
     if n != 0:
@@ -39,30 +43,32 @@ def process_file(path, n, top_number, print_result_to_terminal=False, add_stats=
     @path is path to file what is needed to process
     @n is number of n-grams
     """
+    bar.update(10)
     print('* Start processing...')
     try:
         sample_file = open(path, 'r')
         read_file = sample_file.read()
         file_sentenses = re.split(r'\s*[,.\-;\'()\/*\/+<=>?@[\]^_`{|}]\s*|[,.\-;\'()\/*\/+<=>?@[\]^_`{|}]|\\t|\\f|\\v|\\n|\\r', read_file)
         print("* [Completed step 1 of 3] Removed specsymbols and punctuation")
-        
         print("* Staring create ngrams")
         ngram_list = {}
         for sentense in file_sentenses:
             created_ngrams = word_grams(sentense.split(' '), ngram_list, n)
         print("* [Completed step 2 of 3] Created ngrams")
-
+        bar.update(20)
         stop = stopwords.words('english') + ['']
 
         def has_stop(words):
-            for word in words:
-                if word in stop:
-                    return True
-            return False
+            with warnings.catch_warnings():
+                for word in words:
+                    if word in stop:
+                        return True
+                return False
 
         def lo_lower(words):
             return tuple(word.lower().strip() for word in words if '' not in words)
 
+        rising = 70 if n == 0 else 15
         print('* Start removing stopwords and writting to files')
         for n_, arr in ngram_list.items():
             filtered_words = [lo_lower(words) for words in arr if not has_stop(words)]
@@ -73,11 +79,15 @@ def process_file(path, n, top_number, print_result_to_terminal=False, add_stats=
             write_result(result, n_, add_stats)
             top = result[:top_number]
 
+            # time.sleep(0.1)
+            bar.update(bar.percentage + rising)
             if print_result_to_terminal:
                 print('TOP{} result for {}-grams:'.format(top_number, n_))
                 for k,v in top:
                     print k,v
         print('* [Completed step 3 of 3] Removing stopwords and writting to files')
+        time.sleep(0.2)
+        bar.update(100)
         return result
 
     except (IOError, TypeError) as ex:
