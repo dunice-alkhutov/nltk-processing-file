@@ -6,8 +6,6 @@ while len(rnd_lines) < 100:
     if rnd not in rnd_lines:
         rnd_lines.append(rnd)
 
-print(rnd_lines)
-
 dst = open('dst.txt', 'w')
 
 with open("dump 2.txt") as fp:
