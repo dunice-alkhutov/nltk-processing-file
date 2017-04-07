@@ -17,8 +17,9 @@ def main(argv):
             -s  path to source file(required)
             -d  path to destination file(required)
             -n  number of lines to put into destination file
-            Example: "python app.py -s /path/to/file1 -d /path/to/file2'''
+            Example: "python create_random_sample.py -s /path/to/file1 -d /path/to/file2'''
             print(message)
+            sys.exit()
         elif opt == '-s':
             source_file = arg
         elif opt == '-d':

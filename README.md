@@ -26,3 +26,18 @@ You can type
 $ python app.py -h
 ```
 to see all flags and them description
+
+
+There is help script `create_random_sample.py`
+It can create small sample file to test
+
+Usage create_random_sample.py
+-----------
+```shell
+$ python create_random_sample.py -s src.txt -d dest.txt -n 150
+```
+
+Also you can see it help by
+```shell
+$ python create_random_sample.py -h
+```
