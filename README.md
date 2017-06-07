@@ -31,7 +31,7 @@ to see all flags and them description
 create_random_sample.py
 -----------
 There is help script `create_random_sample.py`
-It can create small sample file to test
+It can create small sample file from large file to test
 
 Usage:
 ```shell
